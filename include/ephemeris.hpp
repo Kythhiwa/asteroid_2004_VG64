@@ -3,7 +3,7 @@
 #include <string>
 #include <vector> 
 
-#include "ephaccess.h"
+#include "../external/libephaccess/ephaccess.h"
 #include "geometry.hpp"
 
 class Ephemeris
@@ -29,7 +29,10 @@ public:
     Ephemeris();
     
     void loadFile(std::string filename);
-
+        
+    /*
+     * /param[in] jd Момент времени по шкале TDB в формате (JD)
+     */
     StateVector getStateVector(int body, int reference, double jd);
     
     void setDistance(int dist_type);
