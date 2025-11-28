@@ -31,6 +31,34 @@ BodyVector Rk4Integrator::rk4step(const BodyVector &state, double jd, double dt)
     return new_state;
 }
 
+
+
+void Rk4Integrator::integrateOrbit(
+            const BodyVector &state,
+            double start_jd, 
+            double duration_days,
+            double dt)
+{
+    BodyVector cur = state;
+    double step_days = dt / 86400;
+    double step = duration_days / step_days;
+
+    states.clear();
+    states.reserve(step);
+
+    for (std::size_t i = 0; i < step; ++i)
+    {
+        double cur_jd = start_jd + i * step_days;
+        cur = rk4step(cur, cur_jd, dt);
+        states.emplace_back(cur_jd, cur);
+    }
+}
+
+std::vector<Rk4Integrator::State> Rk4Integrator::getOrbit() const 
+{
+    return states;
+}
+
 BodyVector Rk4Integrator::computeDer(const BodyVector &state, double jd)
 {
     BodyVector deriv;
@@ -55,3 +83,87 @@ BodyVector Rk4Integrator::computeDer(const BodyVector &state, double jd)
     
     return deriv;
 }
+
+
+Vector3D Rk4Integrator::interpolatePosition(double jd) const
+{
+    auto it = std::lower_bound(states.begin(), states.end(), jd,
+            [](const State& state, double jd_val)
+            {
+                return state.jd < jd_val;
+            });
+    if (it == states.begin())
+    {
+        return states.front().x.x;
+    }
+
+    if (it == states.end())
+    {
+        return states.back().x.x;
+    }
+    auto prev_it = it - 1;
+    double jd1 = prev_it->jd;
+    double jd2 = it->jd;
+    Vector3D pos1 = prev_it->x.x;
+    Vector3D pos2 = it->x.x;
+
+    double t = (jd - jd1) / (jd2 - jd1);
+    return pos1 + (pos2 - pos1) * t;
+}
+
+Vector3D Rk4Integrator::lightTimeCorrection(double jd, const Vector3D &obs) const
+{
+    double delta = 0.0;
+    const double c = 299792.458; 
+    const std::size_t max_iters = 20;
+    const double eps = 1e-18;
+
+    for (std::size_t i = 0; i < max_iters; ++i) 
+    {
+        double cur_jd = jd - delta / 86400;
+        Vector3D obj_pos = interpolatePosition(cur_jd);
+        double dist = (obj_pos - obs).len();
+
+        double cur_delta = dist / c;
+        
+        if (std::abs(cur_delta - delta) < eps)
+        {
+            break;
+        }
+        
+        delta = cur_delta;
+    }
+
+    return interpolatePosition(jd - delta / 86400);
+}
+
+void Rk4Integrator::cartToRaDec(const Vector3D& pos, double& ra, double& dec, double& dist)
+{
+    double c[3];
+    c[0] = pos.x;
+    c[1] = pos.y; 
+    c[2] = pos.z;
+    
+    double theta, phi;
+    iauC2s(c, &phi, &theta); 
+    
+    ra = iauAnp(phi) * 180.0 / M_PI;  
+    dec = theta * 180.0 / M_PI;      
+    dist = std::sqrt(c[0]*c[0] + c[1]*c[1] + c[2]*c[2]);
+}
+
+
+
+Vector3D Rk4Integrator::applyAstrometricCorrections(
+            double jd, 
+            const Vector3D &obs)
+{
+    Vector3D ast_ltc = lightTimeCorrection(jd, obs);
+
+    Vector3D obs_ast = ast_ltc - obs;
+
+    //TODO  iauLd iauAb
+
+    return obs_ast;
+}
+

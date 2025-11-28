@@ -1,19 +1,55 @@
 #pragma once
 
-#include "ephemeris.hpp"
+#include <algorithm>
 
+#include "ephemeris.hpp"
+#include "../external/sofa/20231011/c/src/sofa.h"
 
 class Rk4Integrator
 {
 public:
+    struct State 
+    {
+        double jd;
+        BodyVector x;
+        State(double jd, BodyVector &x)
+            : jd(jd), x(x) {}
+    };
+
     Rk4Integrator(Ephemeris &eph) : eph(eph) {};
     
     BodyVector rk4step(const BodyVector &state, double jd, double dt);
 
-private: 
-    Ephemeris &eph;
+    void cartToRaDec(const Vector3D& pos, double& ra, double& dec, double& dist);
     
+    void computeObservedRaDec(double jd_tdb, const Vector3D& obs_pos, 
+                             double& ra, double& dec, double& dist);
+
+
+    Vector3D interpolatePosition(double jd) const;
+
+    // dt (sec)
+    void integrateOrbit(
+            const BodyVector &state,
+            double start_jd, 
+            double duration_days,
+            double dt = 3600);
+   
+  
+    std::vector<State> getOrbit() const;
+
+    
+    Vector3D applyAstrometricCorrections(
+            double jd, 
+            const Vector3D &obs);
+
+private: 
+     // JD (TDB)
+    Vector3D lightTimeCorrection(double jd, const Vector3D& obs) const;
     BodyVector computeDer(const BodyVector &state, double jd);
+
+    Ephemeris &eph;
+    std::vector<State> states;
 
     std::vector<std::pair<int, double>> planetsGM = {
         {(int)Ephemeris::CelestialBody::Sun, 132712440043.17},

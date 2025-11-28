@@ -39,7 +39,7 @@ std::map<std::string, Vector3D> read_obs(std::string filename)
         }
         catch (...)
         {
-            std::cerr << "[SKIP LINE DATA OBS]\n";
+            // std::cerr << "[SKIP LINE DATA OBS]\n";
             continue;
         }
 
@@ -79,7 +79,7 @@ std::set<EOPEntry> read_eop(std::string filename)
         }
         catch (...)
         {
-            std::cerr << "[SKIP LINE DATA EOP]\n";
+            // std::cerr << "[SKIP LINE DATA EOP]\n";
         }
         data.insert(EOPEntry{mjd, ut1_utc, xp * DAS2R, yp * DAS2R});
     }
