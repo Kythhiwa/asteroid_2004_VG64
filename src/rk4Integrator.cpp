@@ -39,9 +39,13 @@ void Rk4Integrator::integrateOrbit(
             double duration_days,
             double dt)
 {
+    start_jd_ = start_jd;
+
     BodyVector cur = state;
     double step_days = dt / 86400;
     double step = duration_days / step_days;
+    
+    step_jd_ = step_days;
 
     states.clear();
     states.reserve(step);
@@ -84,28 +88,29 @@ BodyVector Rk4Integrator::computeDer(const BodyVector &state, double jd)
     return deriv;
 }
 
-
 Vector3D Rk4Integrator::interpolatePosition(double jd) const
 {
-    auto it = std::lower_bound(states.begin(), states.end(), jd,
-            [](const State& state, double jd_val)
-            {
-                return state.jd < jd_val;
-            });
-    if (it == states.begin())
+    if (jd < start_jd_)
     {
-        return states.front().x.x;
+        throw std::runtime_error("jd < start_jd");
     }
+    std::size_t idx = (jd - start_jd_) / step_jd_;
 
-    if (it == states.end())
+    if (idx == 0)
+    {
+        idx = 1;
+    }
+    if (idx >= states.size())
     {
         return states.back().x.x;
     }
-    auto prev_it = it - 1;
-    double jd1 = prev_it->jd;
-    double jd2 = it->jd;
-    Vector3D pos1 = prev_it->x.x;
-    Vector3D pos2 = it->x.x;
+    
+    auto cur =  states[idx];
+    auto prev = states[idx - 1];
+    double jd1 = prev.jd;
+    double jd2 = cur.jd;
+    Vector3D pos1 = prev.x.x;
+    Vector3D pos2 = cur.x.x;
 
     double t = (jd - jd1) / (jd2 - jd1);
     return pos1 + (pos2 - pos1) * t;

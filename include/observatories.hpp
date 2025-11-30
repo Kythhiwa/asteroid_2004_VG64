@@ -23,7 +23,8 @@ public:
     
     // JD (TDB)
     Vector3D getConvertObsForJD(double JD, std::string code);
-    
+ 
+    double convertUtcToTdb(double jd_utc, std::string code);
 
     std::set<EOPEntry> getEop() const;
 

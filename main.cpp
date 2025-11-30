@@ -83,8 +83,10 @@ void test2()
     double cur_jd = 2459180.5;
 
     auto comp_pos_ast_1 = r.interpolatePosition(cur_jd);
-    auto comp_pos_obs_1 = obs.getConvertObsForJD(cur_jd, "145"); // 145 - 's-Gravenwezel (observatory)
 
+    auto comp_pos_obs_1 = obs.getConvertObsForJD(cur_jd, "145"); // 145 - 's-Gravenwezel (observatory)
+    std::cout << std::fixed << std::setprecision(10);
+    std::cout << 2453322.61435  << " " << obs.convertUtcToTdb(2453322.61435, "991") << "\n"; 
     auto v = comp_pos_ast_1 - comp_pos_obs_1;
     double Ra, Dec, dist;
     r.cartToRaDec(v, Ra, Dec, dist);
@@ -103,9 +105,49 @@ void test2()
     std::cout << "Compute(corrections)         RA = " << " " << Ra1 << " Dec = " << Dec1 << " Distance = " << dist1 << "\n";
 }
 
+void solve(Rk4Integrator &r, Observatories &obs, std::vector<RaDec> &a)
+{
+    double start_jd = 2453320;
+    BodyVector asteroid = {
+        {1.367372443402559E+08, 6.602611574848668E+07,3.033666479027805E+07},
+
+        {8.299501903651528E+00, 2.704928307360539E+01,-1.899669293113739E+00}
+    };
+
+    r.integrateOrbit(asteroid, start_jd, 12 * 365, 3600);
+    {
+        std::size_t i = 1;
+        std::ofstream file("result.txt");
+        for (auto [cur_jd_utc, Ra, Dec, code] : a)
+        {
+            file << "observations " << i << " JD " << cur_jd_utc  <<  ": \n";
+            double cur_jd_tdb = obs.convertUtcToTdb(cur_jd_utc, code);
+            auto comp_pos_obs  = obs.getConvertObsForJD(cur_jd_tdb, code);
+            auto ltc = r.applyAstrometricCorrections(cur_jd_tdb, comp_pos_obs);
+            double Ra1, Dec1, dist1;
+            r.cartToRaDec(ltc, Ra1, Dec1, dist1);
+
+            file << std::fixed << std::setprecision(8);
+            file << "Exact   Ra = " << Ra << " Dec = " << Dec << "\n";
+            file << "Compute Ra = " << Ra1 << " Dec = " << Dec1 << "\n";
+            file << "Diff    Ra = " << Ra - Ra1 << " Dec = "  << Dec - Dec1 << "\n\n"; 
+            ++i;
+        }
+        file.close();
+    }
+}
 
 int main()
 {
-    test1();
-    test2();
+    Ephemeris eph;
+    eph.loadFile("data/de440s.bsp");
+
+    Observatories obs(eph);
+    obs.loadFileObs("data/ObsCodes.html");
+    obs.loadFileEop("data/finals.data.iau2000.txt");
+    
+    Rk4Integrator r(eph);
+
+    auto a = read_observations("data/observations.txt");
+    solve(r, obs, a);
 }

@@ -76,7 +76,8 @@ Vector3D Observatories::getConvertObsForJD(double JD_tdb, std::string code)
     else if (it != eop.begin()) 
     {
         auto prev_it = std::prev(it);
-        if (fabs(mjd_utc - prev_it->mjd) < fabs(mjd_utc - it->mjd)) {
+        if (fabs(mjd_utc - prev_it->mjd) < fabs(mjd_utc - it->mjd)) 
+        {
             it = prev_it;
         }
     }
@@ -106,4 +107,71 @@ Vector3D Observatories::getConvertObsForJD(double JD_tdb, std::string code)
     );
 
     return Vector3D{gcrs[0], gcrs[1], gcrs[2]} + earth_state.x;
+}
+
+
+double Observatories::convertUtcToTdb(double jd_utc, std::string code)
+{
+    double itrs[3] = {obs[code].x, obs[code].y, obs[code].z};
+    double elong = atan2(itrs[1], itrs[0]);
+    double u = sqrt(itrs[0] * itrs[0] + itrs[1] * itrs[1 ]);
+    double v = itrs[2];
+
+    double mjd_utc =  jd_utc - 2400000.5;
+    auto it = eop.lower_bound(EOPEntry{mjd_utc, 0, 0, 0});
+    if (it == eop.end()) 
+    {
+        it = --eop.end(); 
+    }
+    else if (it != eop.begin()) 
+    {
+        auto prev_it = std::prev(it);
+        if (fabs(mjd_utc - prev_it->mjd) < fabs(mjd_utc - it->mjd)) 
+        {
+            it = prev_it;
+        }
+    }
+    double ut1_jd = jd_utc + (it->ut1_utc / 86400.0);
+    double ut11 = floor(ut1_jd);
+    double ut12 = ut1_jd - ut11;
+    // UTC -> TAI -> TT
+    double utc1 = floor(jd_utc);
+    double utc2 = jd_utc - utc1;
+    
+    double tai1, tai2;
+    int status = iauUtctai(utc1, utc2, &tai1, &tai2);
+    if (status != 0)
+    {
+        throw std::runtime_error("[ERROR] UTC -> TAI conversion failed");
+    }
+    
+    double tt1_target, tt2_target;
+    iauTaitt(tai1, tai2, &tt1_target, &tt2_target);
+    double jd_tt_target = tt1_target + tt2_target;
+
+    // TDB iter 
+    double jd_tdb = jd_tt_target; 
+    
+    for (std::size_t iter = 0; iter < 5; ++iter)
+    {
+        double tdb1 = floor(jd_tdb);
+        double tdb2 = jd_tdb - tdb1;
+        
+        double dtr = iauDtdb(tdb1, tdb2, ut12, elong, u, v);
+        
+        // TDB -> TT
+        double tt1_calc, tt2_calc;
+        iauTdbtt(tdb1, tdb2, dtr, &tt1_calc, &tt2_calc);
+        double JD_tt_calc = tt1_calc + tt2_calc;
+        
+        double delta = jd_tt_target - JD_tt_calc;
+        jd_tdb += delta;
+        
+        if (fabs(delta) < 1e-18) 
+        {
+            break;
+        }
+    }
+    
+    return jd_tdb;
 }

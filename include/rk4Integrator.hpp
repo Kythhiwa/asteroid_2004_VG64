@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include <iomanip>
 #include "ephemeris.hpp"
 #include "../external/sofa/20231011/c/src/sofa.h"
 
@@ -50,6 +51,9 @@ private:
 
     Ephemeris &eph;
     std::vector<State> states;
+
+    double start_jd_;
+    double step_jd_;
 
     std::vector<std::pair<int, double>> planetsGM = {
         {(int)Ephemeris::CelestialBody::Sun, 132712440043.17},
