@@ -142,8 +142,10 @@ Vector3D Rk4Integrator::lightTimeCorrection(double jd, const Vector3D &obs) cons
     return interpolatePosition(jd - delta / 86400);
 }
 
+
 void Rk4Integrator::cartToRaDec(const Vector3D& pos, double& ra, double& dec, double& dist)
 {
+
     double c[3];
     c[0] = pos.x;
     c[1] = pos.y; 
@@ -154,21 +156,95 @@ void Rk4Integrator::cartToRaDec(const Vector3D& pos, double& ra, double& dec, do
     
     ra = iauAnp(phi) * 180.0 / M_PI;  
     dec = theta * 180.0 / M_PI;      
-    dist = std::sqrt(c[0]*c[0] + c[1]*c[1] + c[2]*c[2]);
+    dist = std::sqrt(c[0] * c[0] + c[1] * c[1] + c[2] * c[2]);
+}
+
+Vector3D Rk4Integrator::lightDeflection(const Vector3D &obs_ast,
+                                        const Vector3D &obs,
+                                        const StateVector &Earth,
+                                        const StateVector &Sun)
+{
+    const double au_to_km = 149597870.7;
+    
+    Vector3D obs_pos_au = obs * (1.0 / au_to_km);
+    Vector3D sun_pos_au = Sun.x * (1.0 / au_to_km);
+    Vector3D ast_pos_au = (obs + obs_ast) * (1.0 / au_to_km); 
+    Vector3D p_vec = obs_ast * (1.0 / au_to_km); 
+
+    double p_len = p_vec.len();
+    Vector3D p_dir = p_vec.normalized();
+    double p[3] = {p_dir.x, p_dir.y, p_dir.z};
+
+    Vector3D body_to_obs = obs_pos_au - sun_pos_au; 
+    double dist_body_obs = body_to_obs.len();           
+    Vector3D e_dir = body_to_obs.normalized();      
+    double e[3] = {e_dir.x, e_dir.y, e_dir.z};
+
+    double em = dist_body_obs; 
+
+    Vector3D body_to_source = ast_pos_au - sun_pos_au; 
+    Vector3D q_dir = body_to_source.normalized();
+    
+        
+    double q[3] = {q_dir.x, q_dir.y, q_dir.z};
+
+    double bm = 1.0;
+    double dlim = 1e-6;
+    double p1[3];       
+    
+    iauLd(bm, p, q, e, em, dlim, p1);
+    
+    Vector3D result_dir(p1[0], p1[1], p1[2]);
+    return result_dir * p_len * au_to_km;
 }
 
 
+Vector3D Rk4Integrator::lightAbberation(
+        const Vector3D &obs_ast, 
+        const Vector3D &obs, 
+        const StateVector &Earth, 
+        const StateVector &Sun)
+{
+    const double au_to_km = 149597870.7;
+    const double c_km_s = 299792.458; 
+    
+    Vector3D natural_dir = obs_ast.normalized(); 
+    double pnat[3] = {natural_dir.x, natural_dir.y, natural_dir.z};
+    
+    Vector3D velocity_c = Earth.v * (1.0 / c_km_s);
+    double v[3] = {velocity_c.x, velocity_c.y, velocity_c.z};
+    
+    Vector3D obs_pos_au = obs * (1.0 / au_to_km);
+    Vector3D sun_pos_au = Sun.x * (1.0 / au_to_km);
+    Vector3D sun_to_obs = obs_pos_au - sun_pos_au;
+    double s = sun_to_obs.len();     
+
+    double v_squared = velocity_c.x * velocity_c.x + 
+                      velocity_c.y * velocity_c.y + 
+                      velocity_c.z * velocity_c.z;
+    double bm1 = sqrt(1.0 - v_squared);
+    
+    double ppr[3];
+    iauAb(pnat, v, s, bm1, ppr);
+    
+    Vector3D aberrated_dir(ppr[0], ppr[1], ppr[2]);
+    double distance = obs_ast.len();
+    
+    return aberrated_dir * distance;
+}
 
 Vector3D Rk4Integrator::applyAstrometricCorrections(
             double jd, 
-            const Vector3D &obs)
+            const Vector3D &obs,
+            const StateVector &earth,
+            const StateVector &Sun)
 {
     Vector3D ast_ltc = lightTimeCorrection(jd, obs);
 
     Vector3D obs_ast = ast_ltc - obs;
-
-    //TODO  iauLd iauAb
-
+    obs_ast = lightAbberation(obs_ast, obs, earth, Sun);
+    
+    obs_ast = lightDeflection(obs_ast, obs, earth, Sun);
+    
     return obs_ast;
 }
-

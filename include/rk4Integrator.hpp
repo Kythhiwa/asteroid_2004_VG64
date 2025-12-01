@@ -42,13 +42,26 @@ public:
     
     Vector3D applyAstrometricCorrections(
             double jd, 
-            const Vector3D &obs);
+            const Vector3D &obs,
+            const StateVector &earth,
+            const StateVector &Sun);
 
 private: 
      // JD (TDB)
-    Vector3D lightTimeCorrection(double jd, const Vector3D& obs) const;
-    BodyVector computeDer(const BodyVector &state, double jd);
+    Vector3D lightTimeCorrection(double jd, const Vector3D &obs) const;
+    
+    Vector3D lightAbberation(const Vector3D &obs_ast, 
+                             const Vector3D &obs,
+                             const StateVector &Earth, 
+                             const StateVector &Sun);
 
+    Vector3D lightDeflection(const Vector3D &obs_ast,
+                             const Vector3D &obs,
+                             const StateVector &Earth,
+                             const StateVector &Sun);
+
+    BodyVector computeDer(const BodyVector &state, double jd);
+    
     Ephemeris &eph;
     std::vector<State> states;
 
@@ -59,7 +72,7 @@ private:
         {(int)Ephemeris::CelestialBody::Sun, 132712440043.17},
         {(int)Ephemeris::CelestialBody::Mercury, 22031.78000},
         {(int)Ephemeris::CelestialBody::Venus,324858.59200},
-        {(int)Ephemeris::CelestialBody::Earth,398600.43629 },
+        {(int)Ephemeris::CelestialBody::Earth,398600.43629},
         {(int)Ephemeris::CelestialBody::Mars, 42828.37521},
         {(int)Ephemeris::CelestialBody::Jupiter, 126712764.13345},
         {(int)Ephemeris::CelestialBody::Saturn,37940585.20000},

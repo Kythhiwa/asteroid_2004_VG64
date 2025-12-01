@@ -64,9 +64,26 @@ Vector3D &Vector3D::operator/=(double scalar)
     z /= scalar;
     return *this;
 }
-double Vector3D::len()
+double Vector3D::len() const
 {
     return std::sqrt(x * x + y * y + z * z);
 }
 
-
+Vector3D Vector3D::normalized() const {
+        double le = len();
+        if (le < 1e-18)
+        { 
+            return *this;
+        }
+        return Vector3D(x/le, y/le, z/le);
+    }
+    
+void Vector3D::normalize() {
+    double le = len();
+    if (le > 1e-15) 
+    {
+        x /= le;
+        y /= le; 
+        z /= le;
+    }
+}

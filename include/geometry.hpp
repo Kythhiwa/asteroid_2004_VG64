@@ -26,7 +26,13 @@ struct Vector3D
     Vector3D &operator*=(double scalar);
     Vector3D &operator/=(double scalar);
 
-    double len();
+    
+    Vector3D normalized() const;
+    void normalize();
+
+
+    double len() const;
+
 };
 
 struct StateVector
