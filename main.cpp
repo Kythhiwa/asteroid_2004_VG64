@@ -41,7 +41,6 @@ void solve(Ephemeris &eph, Rk4Integrator &r, Observatories &obs, std::vector<RaD
             file << "Exact   Ra = " << Ra << " Dec = " << Dec << "\n";
             file << "Compute Ra = " << Ra1 << " Dec = " << Dec1 << "\n";
             file << "Diff    Ra = " << Ra - Ra1 << " Dec = "  << Dec - Dec1 << "\n\n"; 
-
             ++i;
         }
         file.close();
