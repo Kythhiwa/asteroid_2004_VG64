@@ -8,7 +8,10 @@
 #include <iomanip>
 
 
-void solve(Ephemeris &eph, Rk4Integrator &r, Observatories &obs, std::vector<RaDec> &a)
+void solve(Ephemeris &eph, 
+           Rk4Integrator &r, 
+           Observatories &obs, 
+           std::vector<RaDec> &a)
 {
     double start_jd = 2453320;
     BodyVector asteroid = {
@@ -17,7 +20,6 @@ void solve(Ephemeris &eph, Rk4Integrator &r, Observatories &obs, std::vector<RaD
         {8.299501903651528E+00, 2.704928307360539E+01,-1.899669293113739E+00}
     };
     
-    auto Sun1 = eph.getStateVector((int)Ephemeris::CelestialBody::Sun, (int) Ephemeris::CelestialBody::SSB, start_jd);
     r.integrateOrbit(asteroid, start_jd, 12 * 365, 3600);
     {
         std::size_t i = 1;

@@ -1,6 +1,8 @@
 #include "rk4Integrator.hpp"
 
-BodyVector Rk4Integrator::rk4step(const BodyVector &state, double jd, double dt)
+BodyVector Rk4Integrator::rk4step(const BodyVector &state, 
+                                  double jd, 
+                                  double dt)
 {
     // k1 = f(t, y)
     BodyVector k1 = computeDer(state, jd);
@@ -143,7 +145,10 @@ Vector3D Rk4Integrator::lightTimeCorrection(double jd, const Vector3D &obs) cons
 }
 
 
-void Rk4Integrator::cartToRaDec(const Vector3D& pos, double& ra, double& dec, double& dist)
+void Rk4Integrator::cartToRaDec(const Vector3D& pos, 
+                                double& ra, 
+                                double& dec, 
+                                double& dist)
 {
 
     double c[3];
@@ -199,11 +204,10 @@ Vector3D Rk4Integrator::lightDeflection(const Vector3D &obs_ast,
 }
 
 
-Vector3D Rk4Integrator::lightAbberation(
-        const Vector3D &obs_ast, 
-        const Vector3D &obs, 
-        const StateVector &Earth, 
-        const StateVector &Sun)
+Vector3D Rk4Integrator::lightAbberation(const Vector3D &obs_ast, 
+                                        const Vector3D &obs, 
+                                        const StateVector &Earth, 
+                                        const StateVector &Sun)
 {
     const double au_to_km = 149597870.7;
     const double c_km_s = 299792.458; 
@@ -233,11 +237,10 @@ Vector3D Rk4Integrator::lightAbberation(
     return aberrated_dir * distance;
 }
 
-Vector3D Rk4Integrator::applyAstrometricCorrections(
-            double jd, 
-            const Vector3D &obs,
-            const StateVector &earth,
-            const StateVector &Sun)
+Vector3D Rk4Integrator::applyAstrometricCorrections(double jd, 
+                                                    const Vector3D &obs,
+                                                    const StateVector &earth,
+                                                    const StateVector &Sun)
 {
     Vector3D ast_ltc = lightTimeCorrection(jd, obs);
 

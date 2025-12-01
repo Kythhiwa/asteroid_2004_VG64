@@ -40,7 +40,6 @@ std::vector<std::string> Observatories::getObsCodes() const
 }
 
 
-
 Vector3D Observatories::getConvertObsForJD(double JD_tdb, std::string code)
 {
     double itrs[3] = {obs[code].x, obs[code].y, obs[code].z};

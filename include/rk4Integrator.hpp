@@ -19,13 +19,20 @@ public:
 
     Rk4Integrator(Ephemeris &eph) : eph(eph) {};
     
-    BodyVector rk4step(const BodyVector &state, double jd, double dt);
+    BodyVector rk4step(const BodyVector &state, 
+                       double jd, 
+                       double dt);
 
-    void cartToRaDec(const Vector3D& pos, double& ra, double& dec, double& dist);
+    void cartToRaDec(const Vector3D& pos, 
+                     double& ra, 
+                     double& dec, 
+                     double& dist);
     
-    void computeObservedRaDec(double jd_tdb, const Vector3D& obs_pos, 
-                             double& ra, double& dec, double& dist);
-
+    void computeObservedRaDec(double jd_tdb, 
+                              const Vector3D& obs_pos, 
+                              double& ra, 
+                              double& dec, 
+                              double& dist);
 
     Vector3D interpolatePosition(double jd) const;
 

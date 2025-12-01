@@ -5,14 +5,22 @@
 
 namespace util 
 {
-    void sphToCart(double Long, double cos, double sin, double &x, double &y, double &z)
+    void sphToCart(double Long, 
+                   double cos, 
+                   double sin, 
+                   double &x, 
+                   double &y, 
+                   double &z)
     {
         x = cos * std::cos(Long);
         y = cos * std::sin(Long);
         z = sin;
     }
 
-    void convertToRaDec(const std::string &ra,const std::string &dec, double &Ra, double &Dec)
+    void convertToRaDec(const std::string &ra, 
+                        const std::string &dec, 
+                        double &Ra, 
+                        double &Dec)
     {
         double ra_h = std::stod(ra.substr(0, 2));
         double ra_m = std::stod(ra.substr(3, 2));  
@@ -22,22 +30,31 @@ namespace util
         double dec_m = std::stod(dec.substr(4, 2)); 
         double dec_s = std::stod(dec.substr(7, 5));          
         
-    Ra = (ra_h + ra_m/60.0 + ra_s/3600.0) * 15.0;
-    
-    if (dec_d < 0)
-    {
-        Dec = dec_d - dec_m/60.0 - dec_s/3600.0;
-    }
-    else
-    {
-        Dec = dec_d + dec_m/60.0 + dec_s/3600.0;
-    }
-    
-    if (Ra >= 360.0) Ra -= 360.0;
-    if (Ra < 0.0) Ra += 360.0;    
+        Ra = (ra_h + ra_m/60.0 + ra_s/3600.0) * 15.0;
+        
+        if (dec_d < 0)
+        {
+            Dec = dec_d - dec_m/60.0 - dec_s/3600.0;
+        }
+        else
+        {
+            Dec = dec_d + dec_m/60.0 + dec_s/3600.0;
+        }
+        
+        if (Ra >= 360.0) 
+        {
+            Ra -= 360.0;
+        }
+        if (Ra < 0.0)
+        {
+            Ra += 360.0;    
+        }
     }
 
-    void dateToJd(int year, int month, double day, double &jd)
+    void dateToJd(int year, 
+                  int month, 
+                  double day, 
+                  double &jd)
     {
         if (month <= 2)
         {

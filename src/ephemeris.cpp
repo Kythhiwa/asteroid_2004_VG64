@@ -29,7 +29,9 @@ void Ephemeris::loadFile(std::string filename)
 
 }
 
-StateVector Ephemeris::getStateVector(int body, int reference, double jd)
+StateVector Ephemeris::getStateVector(int body, 
+                                      int reference, 
+                                      double jd)
 {
     double date0 = std::floor(jd);
     double date1 = jd - date0;
