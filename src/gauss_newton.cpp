@@ -159,9 +159,11 @@ bool GaussNewton::solveSystem(const std::vector<std::vector<double>> &A,
     }
     
     // L^T * x = z
-    for (int i = n - 1; i >= 0; --i) {
+    for (int i = n - 1; i >= 0; --i) 
+    {
         double sum = 0.0;
-        for (int j = i + 1; j < n; ++j) {
+        for (int j = i + 1; j < n; ++j) 
+        {
             sum += L[j][i] * x[j];
         }
         x[i] = (z[i] - sum) / L[i][i];
@@ -177,7 +179,6 @@ int GaussNewton::start(std::size_t max_iters, double eps)
     BodyVector best = cur;
     double best_rmse = 1e30;
     std::size_t n_obs = a.size();
-    
 
 
     std::cout << std::fixed << std::setprecision(10);
