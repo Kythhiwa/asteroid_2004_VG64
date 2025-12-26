@@ -15,6 +15,7 @@ add_executable(${PROJECT_NAME}
     src/rk4Integrator.cpp
     src/util.cpp
     src/observatories.cpp
+    src/gauss_newton.cpp
 
     external/libephaccess/daf_reader.c
     external/libephaccess/daf_reader.h

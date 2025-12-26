@@ -109,7 +109,7 @@ std::vector<RaDec> read_observations(std::string filename)
         {
             std::string date = cur.substr(15, 16);
             int year = std::stoi(date.substr(0, 4));
-            if (year > 2007)
+            if (year > 2004)
             {
                 continue;
             }
